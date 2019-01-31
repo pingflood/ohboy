@@ -1,0 +1,10 @@
+Package: ohboy
+Version: 
+Description: RetroGame port of OhBoy
+Section: emus
+Priority: optional
+Maintainer: pingflood
+Architecture: mipsel
+Homepage: https://github.com/pingflood/ohboy
+Depends:
+Source: https://github.com/pingflood/ohboy

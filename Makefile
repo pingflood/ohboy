@@ -115,6 +115,17 @@ $(TARGET): $(OBJS)
 	$(LD) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
 	${DO_STRIP}
 
+ipk: $(TARGET)
+	@rm -rf /tmp/.ohboy-ipk/ && mkdir -p /tmp/.ohboy-ipk/root/home/retrofw/emus/ohboy /tmp/.ohboy-ipk/root/home/retrofw/apps/gmenu2x/sections/emulators /tmp/.ohboy-ipk/root/home/retrofw/apps/gmenu2x/sections/systems
+	@cp -R borders palettes ohboy/ohboy.dge ohboy/ohboy.png /tmp/.ohboy-ipk/root/home/retrofw/emus/ohboy
+	@cp ohboy/ohboy.lnk /tmp/.ohboy-ipk/root/home/retrofw/apps/gmenu2x/sections/emulators
+	@cp ohboy/gbc.ohboy.lnk /tmp/.ohboy-ipk/root/home/retrofw/apps/gmenu2x/sections/systems
+	@sed "s/^Version:.*/Version: $$(date +%Y%m%d)/" ohboy/control > /tmp/.ohboy-ipk/control
+	@tar --owner=0 --group=0 -czvf /tmp/.ohboy-ipk/control.tar.gz -C /tmp/.ohboy-ipk/ control
+	@tar --owner=0 --group=0 -czvf /tmp/.ohboy-ipk/data.tar.gz -C /tmp/.ohboy-ipk/root/ .
+	@echo 2.0 > /tmp/.ohboy-ipk/debian-binary
+	@ar r ohboy/ohboy.ipk /tmp/.ohboy-ipk/control.tar.gz /tmp/.ohboy-ipk/data.tar.gz /tmp/.ohboy-ipk/debian-binary
+
 clean:
 	rm -f ohboy.exe *.o ubytegui/*.o $(GNUBOY)/*.o $(GNUBOY)/unzip/*.o  $(GNUBOY)/sys/*/*.o  $(APP_NAME).elf $(APP_NAME).bin $(APP_NAME).app $(APP_NAME).sim $(TARGET)
 
