@@ -3,6 +3,8 @@
 CC = gcc
 LD = $(CC)
 
+TARGET = ohboy.exe
+
 CFLAGS = -O3
 LDFLAGS = -s
 
@@ -70,7 +72,7 @@ DEFS += -DGNUBOY_NO_SCREENSHOT
 
 MYCC = $(CC) $(CFLAGS) $(INCS) $(DEFS)
 
-all: ohboy_ver.h ohboy
+all: ohboy_ver.h $(TARGET)
 
 # FIXME need better dependency handling
 menu.o: ohboy_ver.h
@@ -78,12 +80,12 @@ menu.o: ohboy_ver.h
 ohboy_ver.h:
 	sh gen_ohboyver.sh > ohboy_ver.h
 
-ohboy: $(OBJS)
+$(TARGET): $(OBJS)
 	$(LD) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
 
 clean:
-	rm -f ohboy ohboy.exe *.o ubytegui/*.o $(GNUBOY)/*.o
-	rm -f ohboy ohboy.exe *.o ubytegui/*.o $(GNUBOY)/*.o $(GNUBOY)/sys/dingoo/*.o   $(APP_NAME).elf $(APP_NAME).bin $(APP_NAME).app $(APP_NAME).sim
+	rm -f ohboy.exe *.o ubytegui/*.o $(GNUBOY)/*.o
+	rm -f ohboy.exe *.o ubytegui/*.o $(GNUBOY)/*.o $(GNUBOY)/sys/dingoo/*.o   $(APP_NAME).elf $(APP_NAME).bin $(APP_NAME).app $(APP_NAME).sim
 
 $(GNUBOY)/main.o:
 	$(MYCC) -Dmain=gnuboy_main -c $(GNUBOY)/main.c -o $@

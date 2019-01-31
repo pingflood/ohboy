@@ -438,9 +438,9 @@ int menu_state(int save){
 	sprintf(saveprefix, "%s%s%s", savedir, DIRSEP, savename);
 
 	if(statesram==0){
-		dialog_begin(save?"Save State":"                       Load State          (SRAM Off)",rom.name);
+		dialog_begin(save?"Save state":"                       Load state          (SRAM Off)",rom.name);
 	}else if(statesram==1){
-		dialog_begin(save?"Save State":"Load State",rom.name);
+		dialog_begin(save?"Save state":"Load state",rom.name);
 	}
 
 	for(i=0; i<sizeof_slots; i++){
@@ -665,6 +665,27 @@ const char *lalt_menu_combo[] = {"No","Select + Start",NULL};
 
 static char config[24][256];
 
+enum {
+	MAIN_SETTINGS,
+	MAIN_SETTINGS_FRAMESKIP,
+	MAIN_SETTINGS_SHOW_FPS,
+	MAIN_SETTINGS_CLOCK_SPEED,
+	MAIN_SETTINGS_ROM_PATH,
+	MAIN_SETTINGS_STATE_SRAM,
+	MAIN_SETTINGS_SYSTEM,
+#ifdef GNUBOY_HARDWARE_VOLUME
+	MAIN_SETTINGS_VOLUME,
+#endif
+	MAIN_SETTINGS_VIDEO,
+	MAIN_SETTINGS_INPUT,
+	MAIN_SETTINGS_DUMMY_1,
+	MAIN_SETTINGS_ABOUT,
+	MAIN_SETTINGS_DUMMY_2,
+	MAIN_SETTINGS_APPLY_AND_SAVE,
+	// MAIN_SETTINGS_APPLY,
+	// MAIN_SETTINGS_CANCEL
+};
+
 int menu_main_settings(){
 
 	int ret=0, i=0;
@@ -715,9 +736,9 @@ int menu_main_settings(){
 
 	romdir = romdir ? strdup(romdir) : strdup(".");
 	
-	start:
+	main_settings:
 
-	dialog_begin("Main Settings",NULL);
+	dialog_begin("Settings",NULL);
 
 	dialog_option("Frameskip",lframeskip,&skip);                /* 1 */
 	dialog_option("Show FPS",lsdl_showfps,&sfps);               /* 2 */
@@ -735,28 +756,43 @@ int menu_main_settings(){
 	dialog_option("System",lsystemmode,&systemmode);            /* 6 */
 #ifdef GNUBOY_HARDWARE_VOLUME
 	dialog_option("Volume",lsndlvl,&sndlvl);                    /* 7 */ /* this is not the OSD volume.. */
-#else
-	dialog_text("Volume", "Default", 0);                        /* 7 */ /* this is not the OSD volume.. */
+// #else
+	// dialog_text("Volume", "Default", 0);                        /* 7 */ /* this is not the OSD volume.. */
 #endif /* GNBOY_HARDWARE_VOLUME */
+	dialog_text("Video",NULL,FIELD_SELECTABLE);                 /* 9 */
+	dialog_text("Input",NULL,FIELD_SELECTABLE);                 /* 9 */
 	dialog_text(NULL,NULL,0);                                   /* 8 */
-	dialog_text("Apply",NULL,FIELD_SELECTABLE);                 /* 9 */
-	dialog_text("Apply & Save",NULL,FIELD_SELECTABLE);          /* 10 */
-	dialog_text("Cancel",NULL,FIELD_SELECTABLE);                /* 11 */
-
+	dialog_text("About",NULL,FIELD_SELECTABLE);                 /* 9 */
+	dialog_text(NULL,NULL,0);                                   /* 8 */
+	dialog_text("Save",NULL,FIELD_SELECTABLE);                 /* 9 */
+	// dialog_text("Apply & Save",NULL,FIELD_SELECTABLE);          /* 10 */
+	// dialog_text("Cancel",NULL,FIELD_SELECTABLE);                /* 11 */
 
 	switch(ret=dialog_end(0)){
-		case 4: /* "Rom Path" romdir */
+		case MAIN_SETTINGS_VIDEO:
+			menu_video_settings();
+			goto main_settings;
+			break;
+		case MAIN_SETTINGS_INPUT:
+			menu_input_settings();
+			goto main_settings;
+			break;
+		case MAIN_SETTINGS_ABOUT:
+			menu_about();
+			goto main_settings;
+			break;
+		case MAIN_SETTINGS_ROM_PATH: /* "Rom Path" romdir */
 			romtemp = menu_requestdir("Select Rom Directory",romdir);
 			if(romtemp){
 				free(romdir);
 				romdir = romtemp;
 			}
-			goto start;
-		case 11: /* Cancel */
-			return ret;
-			break;
-		case 9: /* Apply */
-		case 10: /* Apply & Save */
+			goto main_settings;
+		// case MAIN_SETTINGS_CANCEL: /* Cancel */
+			// return ret;
+			// break;
+		// case MAIN_SETTINGS_APPLY: /* Apply */
+		case MAIN_SETTINGS_APPLY_AND_SAVE: /* Apply & Save */
 			#ifdef GNUBOY_HARDWARE_VOLUME
 			pcm_volume(sndlvl * 10);
 			#endif /* GNBOY_HARDWARE_VOLUME */
@@ -832,7 +868,7 @@ int menu_main_settings(){
 
 			pal_dirty();
 
-			if (ret == 10){ /* Apply & Save */
+			if (ret == MAIN_SETTINGS_APPLY_AND_SAVE){ /* Apply & Save */
 #ifdef DINGOO_SIM
 				file = fopen("a:"DIRSEP"ohboy"DIRSEP"ohboy.rc","w");
 #else
@@ -924,9 +960,9 @@ int menu_video_settings(){
 	dialog_text("GBC Border Image",gbcbordername,FIELD_SELECTABLE);     /* 7 */
 	dialog_option("Simulate Ghosting",lblendfram,&blendfram);  			/* 8 */
 	dialog_text(NULL,NULL,0);                                           /* 9 */
-	dialog_text("Apply",NULL,FIELD_SELECTABLE);                         /* 10 */
-	dialog_text("Apply & Save",NULL,FIELD_SELECTABLE);                  /* 11 */
-	dialog_text("Cancel",NULL,FIELD_SELECTABLE);                        /* 12 */
+	// dialog_text("Apply",NULL,FIELD_SELECTABLE);                         /* 10 */
+	dialog_text("Save",NULL,FIELD_SELECTABLE);                  /* 11 */
+	// dialog_text("Cancel",NULL,FIELD_SELECTABLE);                        /* 12 */
 
 
 	switch(ret=dialog_end(0)){
@@ -962,9 +998,6 @@ int menu_video_settings(){
 				gbcbordername = basexname(gbcbordertemp);
 			}	
 			goto start;
-		case 12: /* Cancel */
-			return ret;
-			break;
 		case 10: /* Apply */
 		case 11: /* Apply & Save */
 
@@ -1055,7 +1088,8 @@ int menu_video_settings(){
 			
 			pal_dirty();
 
-			if (ret == 11){ /* Apply & Save */
+			// if (ret == 11){ /* Apply & Save */
+			if (ret == 10){ /* Apply & Save */
 #ifdef DINGOO_SIM
 				file = fopen("a:"DIRSEP"ohboy"DIRSEP"video.rc","w");
 #else
@@ -1079,6 +1113,10 @@ int menu_video_settings(){
 			scaler_init(0);
 
 		break;
+		default: /* Cancel */
+			return ret;
+			break;
+
 	}
 	free(paldir);
 	free(borderdir);
@@ -1091,7 +1129,7 @@ int menu_input_settings(){
 #ifdef DINGOO_BUILD
 	int btna=1, btnb=2, btnx=0, btny=0, btnl=0, btnr=0;
 #ifdef GCWZERO
-	int alt_menu_combo=0;
+	int alt_menu_combo=1;
 #endif /* GCWZERO */
 #else
 	int btna=2, btnb=1, btnx=0, btny=0, btnl=0, btnr=0;
@@ -1149,9 +1187,9 @@ int menu_input_settings(){
 	dialog_text(NULL,NULL,0);                                /* 11 */
 #endif /* GCWZERO */
 	dialog_text(NULL,NULL,0);                                /* 12 */
-	dialog_text("Apply",NULL,FIELD_SELECTABLE);              /* 13 */
-	dialog_text("Apply & Save",NULL,FIELD_SELECTABLE);       /* 14 */
-	dialog_text("Cancel",NULL,FIELD_SELECTABLE);             /* 15 */
+	dialog_text("Save",NULL,FIELD_SELECTABLE);              /* 13 */
+	// dialog_text("Apply & Save",NULL,FIELD_SELECTABLE);       /* 14 */
+	// dialog_text("Cancel",NULL,FIELD_SELECTABLE);             /* 15 */
 
 	switch(ret=dialog_end(0)){
 		case 15: /* Cancel */
@@ -1435,7 +1473,8 @@ int menu_input_settings(){
 
 			pal_dirty();
 
-			if (ret == 14){ /* Apply & Save */
+			// if (ret == 14){ /* Apply & Save */
+			if (ret == 13){ /* Apply & Save */
 #ifdef DINGOO_SIM
 				file = fopen("a:"DIRSEP"ohboy"DIRSEP"bindings.rc","w");
 #else
@@ -1498,6 +1537,26 @@ snprintf(ohboy_ver_str, sizeof(ohboy_ver_str)-1, "%s Unofficial", OHBOY_VER);
 	return ret;
 }
 
+
+
+
+enum {
+	MAIN_MENU,
+	// MAIN_MENU_BACK,
+	MAIN_MENU_LOAD_STATE,
+	MAIN_MENU_SAVE_STATE,
+	MAIN_MENU_DUMMY_1,
+#ifndef DISABLE_ROMBROWSER
+	MAIN_MENU_LOAD_ROM,
+#endif
+	MAIN_MENU_MAIN_SETTINGS,
+	// MAIN_MENU_VIDEO_SETTINGS,
+	// MAIN_MENU_INPUT_SETTINGS,
+	// MAIN_MENU_ABOUT,
+	MAIN_MENU_RESET_GAME,
+	MAIN_MENU_QUIT,
+};
+
 int menu(){
 
 	char *dir;
@@ -1524,34 +1583,35 @@ int menu(){
 #ifdef CAANOO
 		dialog_begin(rom.name,"Press Home to open the menu");
 #endif
-		dialog_text("Back to Game",NULL,FIELD_SELECTABLE);       /* 1 */
-		dialog_text("Load State",NULL,FIELD_SELECTABLE);         /* 2 */
-		dialog_text("Save State",NULL,FIELD_SELECTABLE);         /* 3 */
-		dialog_text("Reset Game",NULL,FIELD_SELECTABLE);         /* 4 */
+		// dialog_text("Back to Game",NULL,FIELD_SELECTABLE);       /* 1 */
+		dialog_text("Load state",NULL,FIELD_SELECTABLE);         /* 2 */
+		dialog_text("Save state",NULL,FIELD_SELECTABLE);         /* 3 */
 		dialog_text(NULL,NULL,0);                                /* 5 */
-#ifdef DISABLE_ROMBROWSER
-		dialog_text(NULL,NULL,0);                                /* 6 */
-#else
+#ifndef DISABLE_ROMBROWSER
+		// dialog_text(NULL,NULL,0);                                /* 6 */
+// #else
 		dialog_text("Load ROM",NULL,FIELD_SELECTABLE);           /* 6 */
 #endif /*DISABLE_ROMBROWSER*/
-		dialog_text("Main Settings",NULL,FIELD_SELECTABLE);      /* 7 */
-		dialog_text("Video Settings",NULL,FIELD_SELECTABLE);     /* 8 */
-		dialog_text("Input Settings",NULL,FIELD_SELECTABLE);     /* 9 */
-		dialog_text("About",NULL,FIELD_SELECTABLE);              /* 10 */
+		dialog_text("Settings",NULL,FIELD_SELECTABLE);      /* 7 */
+		// dialog_text("Video Settings",NULL,FIELD_SELECTABLE);     /* 8 */
+		// dialog_text("Input Settings",NULL,FIELD_SELECTABLE);     /* 9 */
+		// dialog_text("About",NULL,FIELD_SELECTABLE);              /* 10 */
+		dialog_text("Reset Game",NULL,FIELD_SELECTABLE);         /* 4 */
 		dialog_text("Quit","",FIELD_SELECTABLE);                 /* 11 */
 
 		switch(dialog_end(0)){
-			case 2:
+			case MAIN_MENU_LOAD_STATE:
 				if(menu_state(0)) mexit=1;
 				break;
-			case 3:
+			case MAIN_MENU_SAVE_STATE:
 				if(menu_state(1)) mexit=1;
 				break;
-			case 4:
+			case MAIN_MENU_RESET_GAME:
 				rc_command("reset");
 				mexit=1;
 				break;
-			case 6:
+#ifndef DISABLE_ROMBROWSER
+			case MAIN_MENU_LOAD_ROM:
 #ifdef DINGOO_OPENDINGUX
 				dir = menu_checkdir(rc_getstr("romdir"),getenv("HOME"));
 #else
@@ -1563,19 +1623,20 @@ int menu(){
 					mexit=1;
 				}
 				break;
-			case 7:
+#endif
+			case MAIN_MENU_MAIN_SETTINGS:
 				if(menu_main_settings()) mexit=0;
 				break;
-			case 8:
-				if(menu_video_settings()) mexit=0;
-				break;
-			case 9:
-				if(menu_input_settings()) mexit=0;
-				break;
-			case 10:
-				if(menu_about()) mexit=0;
-				break;
-			case 11:
+			// case MAIN_MENU_VIDEO_SETTINGS:
+			// 	if(menu_video_settings()) mexit=0;
+			// 	break;
+			// case MAIN_MENU_INPUT_SETTINGS:
+			// 	if(menu_input_settings()) mexit=0;
+			// 	break;
+			// case MAIN_MENU_ABOUT:
+			// 	if(menu_about()) mexit=0;
+			// 	break;
+			case MAIN_MENU_QUIT:
 				exit(0);
 				break;
 			default:
@@ -1593,6 +1654,18 @@ int menu(){
 }
 
 /*#include VERSION*/
+
+enum {
+	LAUNCHER,
+	LAUNCHER_LOAD_ROM,
+	LAUNCHER_MAIN_SETTINGS,
+	// LAUNCHER_VIDEO_SETTINGS,
+	// LAUNCHER_INPUT_SETTINGS,
+	// LAUNCHER_ABOUT,
+	// LAUNCHER_RESET_GAME,
+	LAUNCHER_QUIT,
+};
+
 
 int launcher(){;
 
@@ -1626,30 +1699,30 @@ launcher:
 	dialog_begin("OHBOY","Press Home to open the menu");
 #endif
 	dialog_text("Load ROM",NULL,FIELD_SELECTABLE);           /* 1 */
-	dialog_text("Main Settings",NULL,FIELD_SELECTABLE);      /* 2 */
-	dialog_text("Video Settings",NULL,FIELD_SELECTABLE);     /* 3 */
-	dialog_text("Input Settings",NULL,FIELD_SELECTABLE);     /* 4 */
-	dialog_text("About",NULL,FIELD_SELECTABLE);              /* 5 */
+	dialog_text("Settings",NULL,FIELD_SELECTABLE);      /* 2 */
+	// dialog_text("Video Settings",NULL,FIELD_SELECTABLE);     /* 3 */
+	// dialog_text("Input Settings",NULL,FIELD_SELECTABLE);     /* 4 */
+	// dialog_text("About",NULL,FIELD_SELECTABLE);              /* 5 */
 	dialog_text("Quit","",FIELD_SELECTABLE);                 /* 6 */
 
 	switch(dialog_end(0)){
-		case 1:
+		case LAUNCHER_LOAD_ROM:
 			rom = menu_requestfile(NULL,"Select Rom",dir,"gb;gbc;zip;gz;gbz",1);
 			if(!rom) goto launcher;
 			break;
-		case 2:
+		case LAUNCHER_MAIN_SETTINGS:
 			if(!menu_main_settings()) goto launcher;
 			break;
-		case 3:
-			if(!menu_video_settings()) goto launcher;
-			break;
-		case 4:
-			if(!menu_input_settings()) goto launcher;
-			break;
-		case 5:
-			if(!menu_about()) goto launcher;
-			break;
-		case 6:
+		// case LAUNCHER_VIDEO_SETTINGS:
+		// 	if(!menu_video_settings()) goto launcher;
+		// 	break;
+		// case LAUNCHER_INPUT_SETTINGS:
+		// 	if(!menu_input_settings()) goto launcher;
+		// 	break;
+		// case LAUNCHER_ABOUT:
+		// 	if(!menu_about()) goto launcher;
+		// 	break;
+		case LAUNCHER_QUIT:
 			exit(0);
 		default:
 			goto launcher;

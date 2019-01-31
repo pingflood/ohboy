@@ -1,3 +1,6 @@
 *.o
 *.dge
 *.db
+*.exe
+*.ipk
+*.opk
