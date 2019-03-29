@@ -116,10 +116,10 @@ $(TARGET): $(OBJS)
 	${DO_STRIP}
 
 ipk: $(TARGET)
-	@rm -rf /tmp/.ohboy-ipk/ && mkdir -p /tmp/.ohboy-ipk/root/home/retrofw/emus/ohboy /tmp/.ohboy-ipk/root/home/retrofw/apps/gmenu2x/sections/emulators /tmp/.ohboy-ipk/root/home/retrofw/apps/gmenu2x/sections/systems
+	@rm -rf /tmp/.ohboy-ipk/ && mkdir -p /tmp/.ohboy-ipk/root/home/retrofw/emus/ohboy /tmp/.ohboy-ipk/root/home/retrofw/apps/gmenu2x/sections/emulators /tmp/.ohboy-ipk/root/home/retrofw/apps/gmenu2x/sections/emulators.systems
 	@cp -R borders palettes ohboy/ohboy.dge ohboy/ohboy.png /tmp/.ohboy-ipk/root/home/retrofw/emus/ohboy
 	@cp ohboy/ohboy.lnk /tmp/.ohboy-ipk/root/home/retrofw/apps/gmenu2x/sections/emulators
-	@cp ohboy/gbc.ohboy.lnk /tmp/.ohboy-ipk/root/home/retrofw/apps/gmenu2x/sections/systems
+	@cp ohboy/gbc.ohboy.lnk /tmp/.ohboy-ipk/root/home/retrofw/apps/gmenu2x/sections/emulators.systems
 	@sed "s/^Version:.*/Version: $$(date +%Y%m%d)/" ohboy/control > /tmp/.ohboy-ipk/control
 	@tar --owner=0 --group=0 -czvf /tmp/.ohboy-ipk/control.tar.gz -C /tmp/.ohboy-ipk/ control
 	@tar --owner=0 --group=0 -czvf /tmp/.ohboy-ipk/data.tar.gz -C /tmp/.ohboy-ipk/root/ .
